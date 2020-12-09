@@ -14,6 +14,7 @@ module.exports={
   mode: 'none',
   plugins: [
 
+    // asset 파일들 복사
     new CopyWebpackPlugin({
       patterns: [
         {
@@ -23,6 +24,7 @@ module.exports={
       ]
     }),
 
+    // index html 지정
     new HtmlWebPackPlugin({
       template: './index.html',
       filename: 'index.html'

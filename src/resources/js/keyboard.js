@@ -1,14 +1,15 @@
-function keyboard(value) {
-  let key={};
+export function keyboard(value) {
+  let key = {};
   key.value = value;
+
   key.isDown = false;
   key.isUp = true;
   key.press = undefined;
   key.release = undefined;
 
-  // downHandler
+  // 키가 눌렸을 때 handler
   key.downHandler = event => {
-    if (event.key === key.value) {
+    if(event.key === key.value) {
       if(key.isUp && key.press) key.press();
       key.isDown = true;
       key.isUp = false;
@@ -16,7 +17,7 @@ function keyboard(value) {
     }
   };
 
-  // upHandler
+  // 키가 떼졌을 때 handler
   key.upHandler = event => {
     if(event.key === key.value) {
       if(key.isDown && key.release) key.release();
@@ -26,22 +27,20 @@ function keyboard(value) {
     }
   };
 
-  // attache event listeners
   const downListener = key.downHandler.bind(key);
   const upListener = key.upHandler.bind(key);
 
-  window.addEventHandler(
+  window.addEventListener(
     "keydown", downListener, false
   );
-  window.addEventHandler(
-    "keyUp", upListener, false
+  window.addEventListener(
+    "keyup", upListener, false
   );
 
   key.unsubscribe = () => {
     window.removeEventListener("keydown", downListener);
     window.removeEventListener("keyup", upListener);
-  };
+  }
 
   return key;
-
 }

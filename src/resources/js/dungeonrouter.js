@@ -13,23 +13,14 @@ const Application = PIXI.Application,
       Container   = PIXI.Container,
       Sprite      = PIXI.Sprite,
       Loader      = PIXI.loader;
-// 키보드
-/*
-let left  = key("ArrowLeft"),
-    up    = key("ArrowUp"),
-    right = key("ArrowRight"),
-    down  = key("ArrowDown");
-*/
 
 export class DungeonRouter {
   constructor(app, resources) {
     // 키보드 입력 키 설정
-    this.keyboard = new GameKeyboard(
-      'ArrowLeft',
-      'ArrowUp',
-      'ArrowRight',
-      'ArrowDown'
-    );
+    this.keyboardArray = [
+      new GameKeyboard('ArrowLeft','ArrowUp','ArrowRight','ArrowDown'),
+      new GameKeyboard('a','w','d','s'),
+    ];
 
     // 기반 화면
     this.game_scene = new Container();
@@ -54,9 +45,14 @@ export class DungeonRouter {
     this.bunny.anchor.set(0.5); // default로 Sprite의 중심은 이미지의 좌측 상단이 된다. 이를 이미지 중심으로 변경해주는 작업이다.
     this.bunny.x  = 100;
     this.bunny.y  = 100;
-    this.bunny.vx = 0;
-    this.bunny.vy = 0;
     this.game_scene.addChild(this.bunny);
+
+    // 캐릭터2 그리기
+    this.bunny2 = new Sprite(resources.bunny.texture);
+    this.bunny2.anchor.set(0.5); // default로 Sprite의 중심은 이미지의 좌측 상단이 된다. 이를 이미지 중심으로 변경해주는 작업이다.
+    this.bunny2.x  = 900;
+    this.bunny2.y  = 400;
+    this.game_scene.addChild(this.bunny2);
 
     // 보물상자 그리기
     this.treasure = new Sprite(resources.treasure.texture);
@@ -86,47 +82,17 @@ export class DungeonRouter {
   }
 
   gameLoop() {
-    this.keyboard.getInput();
+    this.keyboardArray[0].getInput();
+    this.keyboardArray[1].getInput();
     this.state(); // 게임의 현재 상태 변경
   }
 
   // 게임 play 모드
   play() {
-    this.bunny.x += this.keyboard.xDirection;
-    this.bunny.y += this.keyboard.yDirection;
-  }
+    this.bunny.x += this.keyboardArray[0].xDirection;
+    this.bunny.y += this.keyboardArray[0].yDirection;
 
-  setupKeyboard(speed) {
-    // 왼쪽 버튼
-    left.press = () => {
-      this.bunny.vx = -speed;
-    };
-    left.release = () => {
-      if(!right.isDown) this.bunny.vx = 0;
-    };
-
-    // 오른쪽 버튼
-    right.press = () => {
-      this.bunny.vx = speed;
-    };
-    right.release = () => {
-      if(!left.isDown) this.bunny.vx = 0;
-    }
-
-    // 위쪽 버튼
-    up.press = () => {
-      this.bunny.vy = -speed;
-    };
-    up.release = () => {
-      if(!down.isDown) this.bunny.vy = 0;
-    }
-
-    // 아래쪽 버튼
-    down.press = () => {
-      this.bunny.vy = speed;
-    };
-    down.release = () => {
-      if(!up.isDown) this.bunny.vy = 0;
-    }
+    this.bunny2.x += this.keyboardArray[1].xDirection;
+    this.bunny2.y += this.keyboardArray[1].yDirection;
   }
 }

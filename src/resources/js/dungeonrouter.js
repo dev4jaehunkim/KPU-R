@@ -4,7 +4,9 @@
 *
 */
 
-import { keyboard } from './keyboard.js'
+'use strict';
+import { key } from './key.js'
+import { GameKeyboard } from './keyboard.js'
 
 // PIXI 간편 변수들
 const Application = PIXI.Application,
@@ -12,13 +14,22 @@ const Application = PIXI.Application,
       Sprite      = PIXI.Sprite,
       Loader      = PIXI.loader;
 // 키보드
-let left  = keyboard("ArrowLeft"),
-    up    = keyboard("ArrowUp"),
-    right = keyboard("ArrowRight"),
-    down  = keyboard("ArrowDown");
+/*
+let left  = key("ArrowLeft"),
+    up    = key("ArrowUp"),
+    right = key("ArrowRight"),
+    down  = key("ArrowDown");
+*/
 
 export class DungeonRouter {
   constructor(app, resources) {
+    // 키보드 입력 키 설정
+    this.keyboard = new GameKeyboard(
+      'ArrowLeft',
+      'ArrowUp',
+      'ArrowRight',
+      'ArrowDown'
+    );
 
     // 기반 화면
     this.game_scene = new Container();
@@ -53,9 +64,6 @@ export class DungeonRouter {
     this.treasure.y = app.screen.height / 2;
     this.game_scene.addChild(this.treasure);
 
-    // 키보드 세팅
-    let speed = 5;
-    this.setupKeyboard(speed);
 
     // 게임 시작 상태로 변경
     this.state = this.play;
@@ -78,13 +86,14 @@ export class DungeonRouter {
   }
 
   gameLoop() {
+    this.keyboard.getInput();
     this.state(); // 게임의 현재 상태 변경
   }
 
   // 게임 play 모드
   play() {
-    this.bunny.x += this.bunny.vx;
-    this.bunny.y += this.bunny.vy;
+    this.bunny.x += this.keyboard.xDirection;
+    this.bunny.y += this.keyboard.yDirection;
   }
 
   setupKeyboard(speed) {

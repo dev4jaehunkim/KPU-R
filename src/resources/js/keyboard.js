@@ -1,46 +1,57 @@
-export function keyboard(value) {
-  let key = {};
-  key.value = value;
+/*
+*
+*   Keyboard Function Code
+*
+*/
 
-  key.isDown = false;
-  key.isUp = true;
-  key.press = undefined;
-  key.release = undefined;
+'use strict';
+import { key } from './key.js'
 
-  // 키가 눌렸을 때 handler
-  key.downHandler = event => {
-    if(event.key === key.value) {
-      if(key.isUp && key.press) key.press();
-      key.isDown = true;
-      key.isUp = false;
-      event.preventDefault();
-    }
-  };
+export class GameKeyboard {
+  constructor(left, up, right, down) {
+    this.left  = key(left),
+    this.up    = key(up),
+    this.right = key(right),
+    this.down  = key(down);
 
-  // 키가 떼졌을 때 handler
-  key.upHandler = event => {
-    if(event.key === key.value) {
-      if(key.isDown && key.release) key.release();
-      key.isDown = false;
-      key.isUp = true;
-      event.preventDefault();
-    }
-  };
-
-  const downListener = key.downHandler.bind(key);
-  const upListener = key.upHandler.bind(key);
-
-  window.addEventListener(
-    "keydown", downListener, false
-  );
-  window.addEventListener(
-    "keyup", upListener, false
-  );
-
-  key.unsubscribe = () => {
-    window.removeEventListener("keydown", downListener);
-    window.removeEventListener("keyup", upListener);
+    // 캐릭터 움직이는 값
+    this.xDirection = 0;
+    this.yDirection = 0;
+    this.speed = 5;
   }
 
-  return key;
+  // 키보드 입력 발생 시, direction 값 변경
+  getInput() {
+    // 왼쪽 버튼
+    this.left.press = () => {
+      this.xDirection = -this.speed;
+    };
+    this.left.release = () => {
+      if(!this.right.isDown) this.xDirection = 0;
+    };
+
+    // 오른쪽 버튼
+    this.right.press = () => {
+      this.xDirection = this.speed;
+    };
+    this.right.release = () => {
+      if(!this.left.isDown) this.xDirection = 0;
+    }
+
+    // 위쪽 버튼
+    this.up.press = () => {
+      this.yDirection = -this.speed;
+    };
+    this.up.release = () => {
+      if(!this.down.isDown) this.yDirection = 0;
+    }
+
+    // 아래쪽 버튼
+    this.down.press = () => {
+      this.yDirection = this.speed;
+    };
+    this.down.release = () => {
+      if(!this.up.isDown) this.yDirection = 0;
+    }
+  }
 }

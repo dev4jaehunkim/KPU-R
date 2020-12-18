@@ -39,7 +39,7 @@ export async function createRoom() {
   peerConnection = new RTCPeerConnection(rtcConfiguration);
 
   // Peer Connection Listener 설정
-  registerPeerConnectionListeners(peerConnection);
+  registerPeerConnectionListeners();
 
   // ICE 할당 받아지면 DB에 저장
   collectIceCandidates(roomRef, peerConnection, 'offerorCandidates', 'answererCandidates');
@@ -50,7 +50,6 @@ export async function createRoom() {
     maxRetransmits: 0
   });
   console.log('Created data Channel', dataChannel);
-
 
   dataChannel.addEventListener('open', dataChannelOpened);
   dataChannel.addEventListener('message', recieveFromPeer);
@@ -79,6 +78,17 @@ export async function createRoom() {
       const rtcSessionDescription = new RTCSessionDescription(data.answer);
       await peerConnection.setRemoteDescription(rtcSessionDescription);
     }
+  });
+
+  // 피어에서 ICE 업데이트 했는지 확인
+  roomRef.collection('answererCandidates').onSnapshot(snapshot => {
+    snapshot.docChanges().forEach(async change => {
+      if (change.type === 'added') {
+        let data = change.doc.data();
+        console.log(`Got new remote ICE candidate: ${JSON.stringify(data)}`);
+        await peerConnection.addIceCandidate(new RTCIceCandidate(data));
+      }
+    });
   });
 
 }
@@ -116,7 +126,7 @@ async function joinRoomById(roomId) {
   peerConnection = new RTCPeerConnection(rtcConfiguration);
 
   // Peer Connection Listener 설정
-  registerPeerConnectionListeners(peerConnection);
+  registerPeerConnectionListeners();
 
   // ICE 할당 받아지면 DB에 저장
   collectIceCandidates(roomRef, peerConnection, 'answererCandidates', 'offerorCandidates');
@@ -139,11 +149,20 @@ async function joinRoomById(roomId) {
   await roomRef.update(roomWithAnswer);
   console.log('joined room!');
 
-  return true;
+  // 피어에서 ICE 업데이트 했는지 확인
+  roomRef.collection('offerorCandidates').onSnapshot(snapshot => {
+    snapshot.docChanges().forEach(async change => {
+      if (change.type === 'added') {
+        let data = change.doc.data();
+        console.log(`Got new remote ICE candidate: ${JSON.stringify(data)}`);
+        await peerConnection.addIceCandidate(new RTCIceCandidate(data));
+      }
+    });
+  });
 }
 
 // 데이터 채널 openned 리스너
-function dataChannelOpened() {
+function dataChannelOpened(event) {
   console.log('data channel opened!');
   console.log(`dataChannel.ordered: ${dataChannel.ordered}`);
   console.log(`dataChannel.maxRetransmits: ${dataChannel.maxRetransmits}`);
@@ -151,7 +170,7 @@ function dataChannelOpened() {
 }
 
 // 데이터 채널 closed 리스너
-function dataChannelClosed() {
+function dataChannelClosed(event) {
   console.log('data channel closed');
 }
 
@@ -161,7 +180,7 @@ function recieveFromPeer(event) {
 }
 
 // 두 peerConnection에 대한 Listener 정의
-function registerPeerConnectionListeners(peerConnection) {
+function registerPeerConnectionListeners() {
 
   // ICE gathering 상태 변화
   peerConnection.addEventListener('icegatheringstatechange', () => {
@@ -192,7 +211,7 @@ function registerPeerConnectionListeners(peerConnection) {
   });
 
   // ICE connection 상태 변화
-  peerConnection.addEventListener('iceconnectionstatechange ', () => {
+  peerConnection.addEventListener('iceconnectionstatechange', () => {
     console.log(
       `ICE connection state change: ${peerConnection.iceConnectionState}`
     );

@@ -114,5 +114,15 @@ export class DungeonRouter {
       this.bunny2.x += getReceivedInput()[0] * 5;
       this.bunny2.y += getReceivedInput()[1] * 5;
     }
+
+    if(this.bunny.x < 0) this.bunny.x = 0;
+    if(this.bunny.y < 0) this.bunny.y = 0;
+    if(this.bunny2.x < 0) this.bunny.x = 0;
+    if(this.bunny2.y < 0) this.bunny.y = 0;
+
+    if(this.bunny.x > 1024) this.bunny.x = 1024;
+    if(this.bunny.y > 512) this.bunny.y = 512;
+    if(this.bunny2.x > 1024) this.bunny.x = 1024;
+    if(this.bunny2.y > 512) this.bunny.y = 512;
   }
 }

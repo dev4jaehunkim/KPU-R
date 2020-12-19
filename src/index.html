@@ -6,6 +6,20 @@
     <title>KPU-R</title>
   </head>
   <body>
+    <div id="init-area">
+      <div id="create-area">
+        <button type="button" name="createR" id="create-btn">방 만들기</button>
+        <div id="create-room-id-container">
+          <span>방 ID :</span>
+          <span id="current-room-id"></span>
+        </div>
+      </div><br>
+      <div id="join-area">
+        <label for="join-room-id-input">들어갈 방 ID</label>
+        <input type="text" id="join-room-id-input">
+        <button type="button" id="join-btn">방 들어가기</button>
+      </div>
+    </div>
     <canvas id="scene"></canvas>
   </body>
 </html>

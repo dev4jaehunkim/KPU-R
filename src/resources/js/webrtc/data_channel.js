@@ -32,31 +32,27 @@ export function getReceivedInput() {
 export let isGameStarted = false;
 
 export function sendInputQueueToPeer(inputQueue) {
-  const buffer = new ArrayBuffer(2 + inputQueue.length);
+  const buffer = new ArrayBuffer(1);
   const dataView = new DataView(buffer);
-  for(let i = 0; i < inputQueue.length; i++) {
-    const input = inputQueue[i];
-    console.log(input);
-    const byte = convertUserInputTo5bitNumber(input);
-    dataView.setUint8(2+i,byte);
-  }
+  const input = inputQueue;
+  const byte = convertUserInputTo5bitNumber(input);
+  dataView.setUint8(0,byte);
   try {
+    console.log(buffer);
     dataChannel.send(buffer);
-  } catch(e) {console.log(e)};
+  } catch(e) {console.log(e.message);}
 }
 
 function receiveInputQueueFromPeer(data) {
   const dataView = new DataView(data);
-  for(i = 0; i < data.length -2; i++) {
-    const byte = dataView.getUnit8(2+i);
-    const input = convert5bitNumberToUserInput(byte);
-    const peerInputWithSync = new UserInputWithSync(
-      input.xDirection,
-      input.yDirection
-    );
-    //receivedInput = peerInputWithSync;
-    receivedInput= [input.xDirection, input.yDirection];
-  }
+  const byte = dataView.getUint8(0);
+  const input = convert5bitNumberToUserInput(byte);
+  const peerInputWithSync = new UserInputWithSync(
+    input.xDirection,
+    input.yDirection
+  );
+  receivedInput= [input.xDirection, input.yDirection];
+
 }
 
 // index.html 에 있는 버튼들에 대해 event Linstener 등록
@@ -224,8 +220,7 @@ function dataChannelClosed(event) {
 
 // 데이터 받았을 때 리스너
 function recieveFromPeer(event) {
-  const data = event.data;
-  console.log(data);
+  let data = event.data;
   receiveInputQueueFromPeer(data);
 }
 

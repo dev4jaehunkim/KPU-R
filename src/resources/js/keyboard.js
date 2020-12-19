@@ -60,8 +60,11 @@ export class GameKeyboard {
       this.xDirection,
       this.yDirection
     );
-    this.inputQueue.push(userInputWithSync);
-    if(isGameStarted) sendInputQueueToPeer(this.inputQueue);
+    //this.inputQueue.push(userInputWithSync);
+    if(isGameStarted) {
+      sendInputQueueToPeer(userInputWithSync);
+      console.log(this.xDirection);
+    }
   }
 }
 

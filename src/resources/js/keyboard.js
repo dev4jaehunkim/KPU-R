@@ -6,6 +6,7 @@
 
 'use strict';
 import { key } from './key.js'
+import { sendInputQueueToPeer, isGameStarted } from './webrtc/data_channel.js'
 
 export class GameKeyboard {
   constructor(left, up, right, down) {
@@ -18,6 +19,8 @@ export class GameKeyboard {
     this.xDirection = 0;
     this.yDirection = 0;
     this.speed = 5;
+
+    this.inputQueue=[];
   }
 
   // 키보드 입력 발생 시, direction 값 변경
@@ -53,5 +56,18 @@ export class GameKeyboard {
     this.down.release = () => {
       if(!this.up.isDown) this.yDirection = 0;
     }
+    const userInputWithSync = new UserInputWithSync(
+      this.xDirection,
+      this.yDirection
+    );
+    this.inputQueue.push(userInputWithSync);
+    if(isGameStarted) sendInputQueueToPeer(this.inputQueue);
+  }
+}
+
+export class UserInputWithSync{
+  constructor(xDirection, yDirection) {
+    this.xDirection = xDirection;
+    this.yDirection = yDirection;
   }
 }

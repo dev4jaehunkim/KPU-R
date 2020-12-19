@@ -6,7 +6,7 @@
 
 'use strict';
 import { GameKeyboard } from './keyboard.js'
-import { init } from './webrtc/data_channel.js'
+import { init, getReceivedInput } from './webrtc/data_channel.js'
 
 // PIXI 간편 변수들
 const Application = PIXI.Application,
@@ -22,8 +22,10 @@ export class DungeonRouter {
       new GameKeyboard('a','w','d','s'),
     ];
 
+    this.amiPlayer2=false;
+
     // webrtc 세팅...
-    init();
+    init(this);
 
     // 기반 화면
     this.game_scene = new Container();
@@ -88,16 +90,26 @@ export class DungeonRouter {
   }
 
   gameLoop() {
-
+    // 키보드 세팅
+    this.keyboardArray[0].getInput();
+    this.keyboardArray[1].getInput();
     this.state(); // 게임의 현재 상태 변경
   }
 
   // 게임 play 모드
   play() {
-    this.bunny.x += this.keyboardArray[0].xDirection;
-    this.bunny.y += this.keyboardArray[0].yDirection;
+    if(this.amiPlayer2){
+      this.bunny2.x += this.keyboardArray[0].xDirection;
+      this.bunny2.y += this.keyboardArray[0].yDirection;
 
-    this.bunny2.x += this.keyboardArray[1].xDirection;
-    this.bunny2.y += this.keyboardArray[1].yDirection;
+      this.bunny.x += getReceivedInput().xDirection;
+      this.bunny.y += getReceivedInput().yDirection;
+    } else {
+      this.bunny.x += this.keyboardArray[0].xDirection;
+      this.bunny.y += this.keyboardArray[0].yDirection;
+
+      this.bunny2.x += getReceivedInput().xDirection;
+      this.bunny2.y += getReceivedInput().yDirection;
+    }
   }
 }

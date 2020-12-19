@@ -9,17 +9,60 @@ import * as firebase from 'firebase/app';
 import 'firebase/firestore';
 import { firebaseConfig } from './firebase_config.js'
 import { rtcConfiguration } from './rtc_configuration.js';
+import { convertUserInputTo5bitNumber, convert5bitNumberToUserInput } from './input_conversion.js';
+import { UserInputWithSync } from '../keyboard.js'
 
-let peerConnection = null,
-    dataChannel = null,
-    roomId = null,
+let peerConnection = null;
+let dataChannel = null;
+let roomId = null,
     roomRef = null;
 
 // ICE 리스트 [local, remote]
 const localICECandDocRefs = [];
 
+let gameObject;
+let receivedInput = [
+  0,
+  0
+]
+export function getReceivedInput() {
+  return receivedInput;
+}
+
+export let isGameStarted = false;
+
+export function sendInputQueueToPeer(inputQueue) {
+  const buffer = new ArrayBuffer(2 + inputQueue.length);
+  const dataView = new DataView(buffer);
+  for(let i = 0; i < inputQueue.length; i++) {
+    const input = inputQueue[i];
+    console.log(input);
+    const byte = convertUserInputTo5bitNumber(input);
+    dataView.setUint8(2+i,byte);
+  }
+  try {
+    dataChannel.send(buffer);
+  } catch(e) {console.log(e)};
+}
+
+function receiveInputQueueFromPeer(data) {
+  const dataView = new DataView(data);
+  for(i = 0; i < data.length -2; i++) {
+    const byte = dataView.getUnit8(2+i);
+    const input = convert5bitNumberToUserInput(byte);
+    const peerInputWithSync = new UserInputWithSync(
+      input.xDirection,
+      input.yDirection
+    );
+    //receivedInput = peerInputWithSync;
+    receivedInput= [input.xDirection, input.yDirection];
+  }
+}
+
 // index.html 에 있는 버튼들에 대해 event Linstener 등록
-export function init() {
+export function init(dungeonRouter) {
+  gameObject = dungeonRouter;
+
   firebase.initializeApp(firebaseConfig);
   document.querySelector('#create-btn').addEventListener('click', createRoom);
   document.querySelector('#join-btn').addEventListener('click', joinRoom);
@@ -29,6 +72,8 @@ export function init() {
 export async function createRoom() {
   document.querySelector('#create-btn').disabled = true;
   document.querySelector('#join-btn').disabled = true;
+
+  gameObject.amiPlayer2=false;
 
   // firestore DB를 통해서 각각의 피어 정보들을 저장하고,
   // 이를 이용해 피어끼리 서로 통신이 이루어지게 한다.
@@ -97,6 +142,8 @@ export async function createRoom() {
 export async function joinRoom() {
   document.querySelector('#create-btn').disabled = true;
   document.querySelector('#join-btn').disabled = true;
+
+  gameObject.amiPlayer2=true;
 
   roomId = document.querySelector('#join-room-id-input').value;
   console.log('Join room: ', roomId);
@@ -167,6 +214,7 @@ function dataChannelOpened(event) {
   console.log(`dataChannel.ordered: ${dataChannel.ordered}`);
   console.log(`dataChannel.maxRetransmits: ${dataChannel.maxRetransmits}`);
   dataChannel.binaryType = 'arraybuffer';
+  isGameStarted = true;
 }
 
 // 데이터 채널 closed 리스너
@@ -176,7 +224,9 @@ function dataChannelClosed(event) {
 
 // 데이터 받았을 때 리스너
 function recieveFromPeer(event) {
-
+  const data = event.data;
+  console.log(data);
+  receiveInputQueueFromPeer(data);
 }
 
 // 두 peerConnection에 대한 Listener 정의
